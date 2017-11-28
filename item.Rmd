@@ -15,47 +15,129 @@ setwd('E:/udacity/r-research')
 Whites = read.csv('wineQualityWhites.csv', header = T, row.names = 1, check.names = F)
 library(ggplot2)
 ```
+
 ### free explore
 1. 先进行单维度探索
 ```{r one-dimention}
 #查看品质的分布
 table(Whites$quality)
+```
+
+查看品质的分布，发现品质5和品质6的白酒较多
+
+```{r}
+
 #画出固定酸度的分布
 hist(Whites$fixed.acidity,xlab = "fixed.acidity",col = "green",border = "red", xlim = c(0,15), #ylim = c(0,100),
    breaks = 20)
+```
+
+画出固定酸度的直方图，固定酸度近似呈正态分布
+
+```{r}
 #画出酒精度的分布
 hist(x=Whites$alcohol,col = "green",border = "red", xlim = c(8,15), #ylim = c(0,100),
    breaks = 20)
 options(warn =-1)
+```
+
+画出酒精度的直方图，呈正偏态分布
+
+```{r}
 #画出不稳定酸度的分布
 qplot(x=volatile.acidity,data = Whites,binwidth =0.02, fill = '#099DD9')+
 scale_x_continuous(breaks = seq(0,1.5,0.1),limits = c(0,0.8))
+```
+
+
+画出不稳定酸度的分布，呈近似正态分布
+
+```{r}
+
 #画出柠檬酸酸度的分布
 qplot(x=citric.acid,data = Whites,binwidth =0.02, fill = '#099DD9')+
 scale_x_continuous(breaks = seq(0,1.66,0.1),limits = c(0,0.8))
+```
+
+画出柠檬酸酸度的分布，除了0.48左右的部分值，整体呈正态分布
+
+```{r}
 #画出剩余糖分的分布
-qplot(x=residual.sugar,data = Whites,binwidth =2, fill = '#099DD9')+
-scale_x_continuous(breaks = seq(0,66,2),limits = c(0,30))
+qplot(x=residual.sugar,data = Whites,binwidth =1, fill = '#099DD9')+
+scale_x_continuous(breaks = seq(0,66,1),limits = c(0,30))
+```
+
+画出剩余糖分的分布，糖分小于2的数量较多
+
+```{r}
 #画出氯化物的分布
 qplot(x=chlorides,data = Whites,binwidth =0.002, fill = '#099DD9')+
 scale_x_continuous(breaks = seq(0,0.4,0.01),limits = c(0,0.12))
+```
+
+
+
+画出氯化物的分布，呈正态分布
+
+```{r}
 #画出游离二氧化硫的分布
 qplot(x=free.sulfur.dioxide,data = Whites,binwidth =3, fill = '#099DD9')+
 scale_x_continuous(breaks = seq(0,290,5),limits = c(0,90))
+```
+
+画出游离二氧化硫的分布，呈近似正态分布
+
+```{r}
 #画出二氧化硫的分布和摘要
 qplot(x=total.sulfur.dioxide,data = Whites,binwidth =10, fill = '#099DD9')+
 scale_x_continuous(breaks = seq(9,440,30),limits = c(9,300))
 summary(Whites$total.sulfur.dioxide)
+```
+
+画出二氧化硫的分布和摘要，呈正态分布
+
+```{r}
 #画出密度的分布和摘要
 qplot(x=density,data = Whites,binwidth =0.001, fill = '#099DD9')+
-scale_x_continuous(breaks = seq(0.9,1.1,0.03),limits = c(0.96,1.05))
+scale_x_continuous(breaks = seq(0.95,1.02,0.01),limits = c(0.96,1.05))
 summary(Whites$density)
 ```
-  
-  发现除了糖分大部分都成正态分布
-  
-2. 进行多维度的探索
+ 
+ 画出密度的分布和摘要，发现密度的分布范围非常狭小
+ 
+```{r , echo=FALSE}
 
+#新变量
+Whites <- transform(Whites,totalaci =fixed.acidity+volatile.acidity )
+```
+
+用固定酸度和不稳定酸度生成新的变量
+
+###### 单变量分析
+What is the structure of your dataset?
+There are 4898 diamonds in the dataset with 11 features (fixed.acidity	volatile.acidity	citric.acid	residual.sugar	chlorides	free.sulfur.dioxide	total.sulfur.dioxide	density	pH	sulphates	alcohol	quality). The vquality is ordered factor variables with the following levels.
+
+(worst) —————-> (best)
+quality: 3,4,5,6,7,8,9
+
+
+Other observations:
+
+Most wines are of quality 5&6.
+
+About 29% of whitewines have residual.sugar less than 1.
+
+
+What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+Most variables are normally distributed
+
+Did you create any new variables from existing variables in the dataset?
+I created a variable use the sum of fixed.acidity and volatile.acidity,I name it totalaci.
+
+
+2. 进行多维度的探索
+  先查看各变量间的相关
+  
 ```{r two-dimention, echo=FALSE}
 library(psych)
 pairs(Whites,main = "Scatterplot Matrix")#
@@ -65,6 +147,7 @@ corr.test(Whites,use="complete")
 ```
   
   经过初步的相关探索，发现有些变量之间相关较高，画出相关系数较大这些变量之间的散点图
+  
 ```{r , echo=FALSE}
 ```
 
@@ -74,21 +157,41 @@ ggplot(aes(x=residual.sugar,y=density),data = Whites)+
   coord_cartesian(xlim = c(0,25),ylim = c(0.975,1.02))+
   geom_point(alpha = 1/2,position = position_jitter(h=0),color='orange')+
   stat_smooth(method=lm, level=0.99)
+```
+
+糖分和密度呈正相关，相关系数较大，但斜率较小
+
+```{r}
 #游离二氧化硫和二氧化硫
 ggplot(aes(x=free.sulfur.dioxide,y=total.sulfur.dioxide),data = Whites)+
   coord_cartesian(xlim = c(0,100),ylim = c(0,300))+
   geom_point(alpha = 1/2,position = position_jitter(h=0),color='orange')+
   stat_smooth(method=lm, level=0.99)
+```
+
+ 游离二氧化硫和总体二氧化硫呈正相关
+ 
+```{r}
 #二氧化硫和密度
 ggplot(aes(x=total.sulfur.dioxide,y=density),data = Whites)+
   coord_cartesian(xlim = c(50,250),ylim = c(0.975,1.01))+
   geom_point(alpha = 1/2,position = position_jitter(h=0),color='orange')+
   stat_smooth(method=lm, level=0.99)
+```
+
+ 二氧化硫和密度呈正相关，斜率较小
+ 
+```{r}
 #糖分和酒精度
 ggplot(aes(x=residual.sugar,y=alcohol),data = Whites)+
   coord_cartesian(xlim = c(0,25),ylim = c(8,14))+
   geom_point(alpha = 1/2,position = position_jitter(h=0),color='orange')+
   stat_smooth(method=lm, level=0.99)
+```
+
+ 糖分和酒精度呈负相关
+ 
+```{r}
 #固定酸度和PH
 ggplot(aes(x=fixed.acidity,y=pH),data = Whites)+
   coord_cartesian(xlim = c(4,10),ylim = c(2.5,4))+
@@ -97,27 +200,96 @@ ggplot(aes(x=fixed.acidity,y=pH),data = Whites)+
 
 ```
 
-发现糖分和密度呈正相关，游离的二氧化硫和总体的二氧化硫呈正相关，总体的二氧化硫和密度呈正相关，糖分和酒精度呈负相关，固定酸度和PH值呈负相关
+
+固定酸度和PH呈负相关
  
 ##### quality和其他变量的箱型图
+
 ```{r , echo=FALSE}
 boxplot(fixed.acidity~quality,data= Whites,xlab='品质',ylab='固定酸度'
       )
-ggplot(Whites, aes(x=factor(quality),y=fixed.acidity))+geom_boxplot()#aes(fill=quality)
+```
+
+发现：不同品质间的固定酸度差异不明显
+
+``` {r}
 ggplot(Whites, aes(x=factor(quality),y=alcohol))+geom_boxplot()
+```
+
+发现：不同品质间的酒精度差异明显，品质5以下，酒精度越高，品质越低，品质5以上，酒精度越高，品质越高
+
+``` {r}
 ggplot(Whites, aes(x=factor(quality),y=density))+geom_boxplot()+
       coord_cartesian(ylim=c(0.985,1.01))
 ```
 
-发现品质在5以上时，品质越高，密度越低
+发现：发现品质在5以上时，品质越高，密度越低
+
+###### 两个变量的分析
+Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+density correlates strongly with residual.sugar, wines with higher residual.sugar may have a higher density.deside this, with vary quality,the relationship between the two variable is different.
+
+
+Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+PH correlates strongly with fixed.acidity
+
+What was the strongest relationship you found?
+density correlates strongly with residual.sugar, wines with higher residual.sugar may have a higher density
 
 3. 三个及以上变量探索
 探索了以上相关变量加上品质之后的变化
+```{r}
+#固定酸度和PH
+ggplot(aes(x=fixed.acidity,y=pH,color=factor(quality)),data = Whites)+
+  coord_cartesian(xlim = c(4,10),ylim = c(2.5,4))+
+  geom_point(alpha = 1/2,position = position_jitter(h=0))+
+scale_color_brewer(palette = "Blues")
+```
 
-```{r , echo=FALSE}
+探索固定酸度和PH在不同品质下的关系，没有发现明显规律
 
-#新变量
-Whites <- transform(Whites,totalaci =fixed.acidity+volatile.acidity )
+```{r}
+#酸度
+ggplot(aes(x=totalaci,y=pH),data = Whites)+
+  facet_wrap(~factor(quality))+
+  geom_point(aes(color=factor(quality)))+
+scale_color_brewer(palette = "Blues")
+```
+
+PH值和总体酸度在不同品质下的关系，发现看不出明显的差异
+
+```{r}
+#游离二氧化硫和二氧化硫
+ggplot(aes(x=free.sulfur.dioxide,y=total.sulfur.dioxide,color=factor(quality)),data = Whites)+
+  coord_cartesian(xlim = c(0,100),ylim = c(0,300))+
+  geom_point(alpha = 1/2,position = position_jitter(h=0))+scale_color_grey(start=0,end=0.8)+
+scale_color_brewer(palette = "Blues")
+```
+
+探索游离二氧化硫和总体二氧化硫在不同品质下的关系，没有发现明显规律
+
+```{r}
+#二氧化硫和密度
+ggplot(aes(x=total.sulfur.dioxide,y=density,color=factor(quality)),data = Whites)+
+  coord_cartesian(xlim = c(50,250),ylim = c(0.975,1.01))+
+  geom_point(alpha = 1/2,position = position_jitter(h=0))+
+scale_color_brewer(palette = "Blues")
+```
+
+探索总体二氧化硫和密度在不同品质下的关系，没有发现明显规律
+
+```{r}
+#糖分和酒精度
+ggplot(aes(x=residual.sugar,y=alcohol,color=factor(quality)),data = Whites)+
+  coord_cartesian(xlim = c(0,25),ylim = c(8,14))+
+  geom_point(alpha = 1/2,position = position_jitter(h=0))+
+scale_color_brewer(palette = "Blues")
+```
+
+探索糖分和酒精度在不同品质下的关系，发现左上角的品质似乎要高一些
+
+
+```{r}
 #糖分和密度
 ggplot(aes(x = residual.sugar, y = density, color = factor(quality)), data = Whites) +
 geom_jitter(alpha = 0.2) +
@@ -127,34 +299,15 @@ geom_smooth(method = "lm", se = FALSE,size=1) +
 ylim(0.985, 1.005) +
 labs(y = '密度',x = '糖分',color="品质等级") +
 ggtitle("不同品质下糖分和密度的关系")
-#酸度
-ggplot(aes(x=totalaci,y=pH),data = Whites)+
-  facet_wrap(~factor(quality))+
-  geom_point(aes(color=factor(quality)))+
-scale_color_brewer(palette = "Blues")
-#游离二氧化硫和二氧化硫
-ggplot(aes(x=free.sulfur.dioxide,y=total.sulfur.dioxide,color=factor(quality)),data = Whites)+
-  coord_cartesian(xlim = c(0,100),ylim = c(0,300))+
-  geom_point(alpha = 1/2,position = position_jitter(h=0))+scale_color_grey(start=0,end=0.8)+
-scale_color_brewer(palette = "Blues")
-#二氧化硫和密度
-ggplot(aes(x=total.sulfur.dioxide,y=density,color=factor(quality)),data = Whites)+
-  coord_cartesian(xlim = c(50,250),ylim = c(0.975,1.01))+
-  geom_point(alpha = 1/2,position = position_jitter(h=0))+
-scale_color_brewer(palette = "Blues")
-#糖分和酒精度
-ggplot(aes(x=residual.sugar,y=alcohol,color=factor(quality)),data = Whites)+
-  coord_cartesian(xlim = c(0,25),ylim = c(8,14))+
-  geom_point(alpha = 1/2,position = position_jitter(h=0))+
-scale_color_brewer(palette = "Blues")
-#固定酸度和PH
-ggplot(aes(x=fixed.acidity,y=pH,color=factor(quality)),data = Whites)+
-  coord_cartesian(xlim = c(4,10),ylim = c(2.5,4))+
-  geom_point(alpha = 1/2,position = position_jitter(h=0))+
-scale_color_brewer(palette = "Blues")
 ```
 
-发现不同品质下密度和糖分的关系有所变化
+探索糖分和密度在不同品质下的关系，发现不同品质下密度和糖分的关系有所不同
+多变量分析
+Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+探索糖分和密度在不同品质下的关系，发现不同品质下密度和糖分的关系有所不同
+
+Were there any interesting or surprising interactions between features?
+当品质较高时（=9），密度随着糖分的提高快速增大
 
 ## Final Plots and Summary
 ```{r , echo=FALSE}
@@ -164,10 +317,19 @@ ggplot(aes(x=residual.sugar,y=density),data = Whites)+
   coord_cartesian(xlim = c(0,25),ylim = c(0.975,1.02))+
   geom_point(alpha = 1/2,position = position_jitter(h=0),color='orange')+
   stat_smooth(method=lm, level=0.99)+labs(x="糖分",y="密度",title = "糖分和密度的散点图")
+```
+
+糖分和密度呈正相关，尽管相关系数不是很高
+
+```{r}
 
 ggplot(Whites, aes(x=factor(quality),y=density))+geom_boxplot()+
       coord_cartesian(ylim=c(0.985,1.01))+labs(x="品质",y="密度",title = "不同品质密度箱型图")
+```
 
+不同品质对应的密度，有较大的区别，尤其是品质5以上，品质越高，密度越低
+
+```{r}
 
 ggplot(aes(x = residual.sugar, y = density, color = factor(quality)), data = Whites) +
 geom_jitter(alpha = 0.2) +
@@ -178,9 +340,11 @@ ylim(0.985, 1.005) +
 labs(y = '密度',x = '糖分',color="品质等级") +
 ggtitle("不同品质下糖分和密度的关系")
 ```
-## Reflection
+
+### Reflection
 先进行了单因素的数据探索，发现大部分数据都呈正态分布。
 通过相关分析，发现了一些相关，如糖分和密度呈显著正相关。
 因此，我想要知道第三个变量和这两个变量的关系，通过画图发现，同样的糖分含量，品质越低，白酒的密度越高。
 遇到的主要问题：不确定要分析哪些变量的关系，后来把所有变量的相关都算了一下，选了相关系数最高的一组变量，然后再研究了和品质的关系。
 收获：数据探索本身可能并没有固定的假设，多尝试可能会发现有意思的点
+下一步工作：探索糖分和酒精度在不同品质下的关系时，发现左上角的品质似乎要高一些，可以就这一点展开进一步研究
